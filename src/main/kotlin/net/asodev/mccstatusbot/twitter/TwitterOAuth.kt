@@ -56,6 +56,9 @@ class TwitterOAuth(val objectMapper: ObjectMapper) {
             .addHeader("Authorization", "Basic $appAuthorization")
             .build()
         val response = client.newCall(request).execute()
+        if (!response.isSuccessful) {
+            throw IllegalStateException("Failed to refresh token ${response.code} -> ${response.body?.string()}")
+        }
         val string = response.body?.string() ?: throw IllegalStateException("Failed to get string from response")
         val data = objectMapper.readValue(string, OAuthResponse::class.java)
 
