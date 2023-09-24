@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.time.Year
+import kotlin.math.max
 
 plugins {
     id("org.springframework.boot") version "3.1.3"
@@ -8,7 +10,20 @@ plugins {
 }
 
 group = "net.asodev"
-version = "0.0.1-SNAPSHOT"
+version = createVersion()
+
+fun createVersion(): String {
+    val env = System.getenv()
+    return if (env["CI"] != "true") {
+        "dev"
+    } else {
+        var runNumber = env["GITHUB_RUN_NUMBER"] ?: "0"
+        runNumber = runNumber.padStart(max(3-runNumber.length, 0), '0')
+
+        val year = Year.now().value
+        "$year-$runNumber"
+    }
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -24,7 +39,6 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<KotlinCompile> {
@@ -34,6 +48,8 @@ tasks.withType<KotlinCompile> {
     }
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+tasks {
+    jar {
+        enabled = false
+    }
 }
