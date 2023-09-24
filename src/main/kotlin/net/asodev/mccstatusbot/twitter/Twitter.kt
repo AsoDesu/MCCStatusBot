@@ -26,10 +26,10 @@ class Twitter(val auth: TwitterOAuth, val objectMapper: ObjectMapper) {
             .addHeader("Authorization", auth.authoriseRequest())
             .build()
         val response = client.newCall(request).execute()
-        response.body?.close()
         if (!response.isSuccessful) {
             LOGGER.error("Failed to send tweet. ${response.code} -> ${response.body?.string()}")
         }
+        response.body?.close()
     }
 
 }
