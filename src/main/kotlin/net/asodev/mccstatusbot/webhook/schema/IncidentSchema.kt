@@ -7,6 +7,12 @@ const val STATUS_DEGRADED_PERFORMANCE = "Degraded performance"
 const val STATUS_PARTIAL_OUTAGE = "Partial outage"
 const val STATUS_MAJOR_OUTAGE = "Major outage"
 
+// Impacts
+const val IMPACT_INVESTIGATING = "Investigating"
+const val IMPACT_IDENTIFIED = "Identified"
+const val IMPACT_MONITORING = "Monitoring"
+const val IMPACT_RESOLVED = "Resolved"
+
 class IncidentData(
     val backfilled: Boolean,
     val created_at: String,
