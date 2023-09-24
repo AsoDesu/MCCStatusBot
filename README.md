@@ -1,6 +1,6 @@
 ![MCC Status](https://i.imgur.com/Da6bv1C_d.webp?maxwidth=600&fidelity=grand)
 
-![Follow us](https://img.shields.io/twitter/follow/mccstatusbot?style=flat%20&logo=twitter)
+[![Follow us](https://img.shields.io/twitter/follow/mccstatusbot?style=flat%20&logo=twitter)](https://twitter.com/mccstatusbot)
 
 
 ---
