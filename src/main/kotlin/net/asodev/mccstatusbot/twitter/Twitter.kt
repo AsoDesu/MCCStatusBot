@@ -7,10 +7,12 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class Twitter(val auth: TwitterOAuth, val objectMapper: ObjectMapper) {
+    val LOGGER = LoggerFactory.getLogger(this::class.java)
 
     fun sendTweet(tweet: TweetRequest) {
         val client = OkHttpClient()
@@ -24,8 +26,9 @@ class Twitter(val auth: TwitterOAuth, val objectMapper: ObjectMapper) {
             .addHeader("Authorization", auth.authoriseRequest())
             .build()
         val response = client.newCall(request).execute()
+        response.body?.close()
         if (!response.isSuccessful) {
-            println("Failed to send tweet. ${response.code} -> ${response.body?.string()}")
+            LOGGER.error("Failed to send tweet. ${response.code} -> ${response.body?.string()}")
         }
     }
 
