@@ -4,23 +4,33 @@ import net.asodev.mccstatusbot.twitter.TweetRequest
 import net.asodev.mccstatusbot.twitter.Twitter
 import net.asodev.mccstatusbot.webhook.schema.*
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
 @RestController
 class InstatusWebhook(val twitter: Twitter) {
-    val LOGGER = LoggerFactory.getLogger(this::class.java)
+    private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
     // Status to be shown as "<Component> experiencing <Status>"
-    val EXPERIENCING = listOf(STATUS_MAJOR_OUTAGE, STATUS_PARTIAL_OUTAGE, STATUS_DEGRADED_PERFORMANCE)
+    private val EXPERIENCING = listOf(STATUS_MAJOR_OUTAGE, STATUS_PARTIAL_OUTAGE, STATUS_DEGRADED_PERFORMANCE)
     // Status to be shown as "<Component> is <Status>"
-    val IS = listOf(STATUS_UNDER_MAINTENANCE, STATUS_OPERATIONAL)
+    private val IS = listOf(STATUS_UNDER_MAINTENANCE, STATUS_OPERATIONAL)
+
+    @Value("\${spring.webhook.secret}")
+    lateinit var webhookSecret: String
 
     @PostMapping("/webhook")
-    fun webhook(@RequestBody data: InstatusUpdate) {
+    fun webhook(@RequestBody data: InstatusUpdate, @RequestParam secret: String?) {
+        if (secret != webhookSecret) {
+            throw ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid secret.")
+        }
         val incident = data.incident ?: return
 
         val content = buildString {
