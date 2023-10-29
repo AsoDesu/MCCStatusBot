@@ -35,7 +35,7 @@ class TwitterOAuth(val objectMapper: ObjectMapper) {
     @PostConstruct
     fun construct() {
         appAuthorization = Base64.getEncoder().encodeToString("$clientId:$clientSecret".toByteArray())
-        //authoriseRequest() // Cache new access token
+        authoriseRequest() // Cache new access token
     }
 
     fun authoriseRequest(): String {

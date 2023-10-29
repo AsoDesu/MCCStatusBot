@@ -19,6 +19,9 @@ class PageData(
 )
 
 abstract class WebhookData {
+    abstract val id: String
+    abstract val name: String
     abstract val impact: String
     abstract val affected_components: List<AffectedComponent>
+    abstract val updates: List<StatusUpdate>
 }

@@ -18,6 +18,10 @@ import java.time.format.DateTimeFormatter
 class InstatusWebhook(val twitter: Twitter) {
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
+    // Twitter has a character limit
+    private val CHARACTER_LIMIT = 280
+    private val CHARACTER_LIMIT_EXCEEDED_SUFFIX = "..."
+
     // Status to be shown as "<Component> experiencing <Status>"
     private val EXPERIENCING = listOf(STATUS_MAJOR_OUTAGE, STATUS_PARTIAL_OUTAGE, STATUS_DEGRADED_PERFORMANCE)
     // Status to be shown as "<Component> is <Status>"
@@ -36,28 +40,40 @@ class InstatusWebhook(val twitter: Twitter) {
         if (secret != webhookSecret) {
             throw ResponseStatusException(HttpStatus.FORBIDDEN, "Invalid secret.")
         }
-        val incident = data.incident ?: return
+        val update = data.incident ?: data.maintenance ?: return
 
         val content = buildString {
-            val component = incident.affected_components.firstOrNull()
+            val component = update.affected_components.firstOrNull()
+            // Writing the "MCC Island is Operation" or "Maintenance planned for MCC Island" text
             if (component != null) {
-                this.appendLine( getComponentStatusMessage(component) )
+                if (data.maintenance != null && data.maintenance.impact == IMPACT_PLANNED) {
+                    this.appendLine( getMaintenancePlannedMessage(data.maintenance, component) )
+                } else {
+                    this.appendLine( getComponentStatusMessage(component) )
+                }
                 this.appendLine()
             }
-            this.appendLine("${replaceImpactName(incident.impact)}- ${incident.name}")
 
-            val updates = incident.incident_updates.sortedBy { Instant.from(DateTimeFormatter.ISO_INSTANT.parse(it.updated_at)).epochSecond }
+            this.appendLine("${replaceImpactName(update.impact)}- ${update.name}")
+
+            val updates = update.updates.sortedBy { Instant.from(DateTimeFormatter.ISO_INSTANT.parse(it.updated_at)).epochSecond }
             val description = updates.lastOrNull()
             if (description != null) {
                 this.appendLine(description.markdown)
             }
         }
 
+        val characterLimit = CHARACTER_LIMIT - CHARACTER_LIMIT_EXCEEDED_SUFFIX.length - 1
+        var tweetContent = content.substring(0..characterLimit)
+        if (tweetContent.length >= characterLimit) {
+            tweetContent += CHARACTER_LIMIT_EXCEEDED_SUFFIX
+        }
+
         val tweet = TweetRequest(
-            text = content
+            text = tweetContent
         )
         twitter.sendTweet(tweet)
-        LOGGER.info("Sent tweet for incident: ${incident.id}")
+        LOGGER.info("Sent tweet for incident: ${update.id}")
     }
 
     fun getComponentStatusMessage(component: AffectedComponent): String {
@@ -70,6 +86,11 @@ class InstatusWebhook(val twitter: Twitter) {
             "$name is $statusName"
         } else ""
     }
+    fun getMaintenancePlannedMessage(update: MaintenanceData, component: AffectedComponent): String {
+        val name = replaceComponentName(component.name)
+
+        return "Maintenance planned for $name \uD83D\uDEE0\uFE0F"
+    }
 
     fun replaceComponentName(name: String): String {
         return when(name) {
@@ -80,10 +101,12 @@ class InstatusWebhook(val twitter: Twitter) {
 
     fun replaceImpactName(name: String): String {
         return name + when(name) {
+            IMPACT_PLANNED -> " \uD83D\uDCC5 "
+            IMPACT_IN_PROGRESS -> "⏳"
             IMPACT_INVESTIGATING -> " \uD83D\uDD0E "
             IMPACT_IDENTIFIED -> "\uD83D\uDCA1"
             IMPACT_MONITORING -> " \uD83D\uDCCB "
-            IMPACT_RESOLVED -> " ✅ "
+            IMPACT_RESOLVED, IMPACT_COMPLETED -> " ✅ "
             else -> " "
         }
     }
