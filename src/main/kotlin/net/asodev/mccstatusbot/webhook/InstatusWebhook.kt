@@ -26,6 +26,11 @@ class InstatusWebhook(val twitter: Twitter) {
     @Value("\${spring.webhook.secret}")
     lateinit var webhookSecret: String
 
+    @PostMapping("/test")
+    fun test(@RequestBody data: String) {
+        println(data)
+    }
+
     @PostMapping("/webhook")
     fun webhook(@RequestBody data: InstatusUpdate, @RequestParam secret: String?) {
         if (secret != webhookSecret) {

@@ -16,21 +16,19 @@ const val IMPACT_RESOLVED = "Resolved"
 class IncidentData(
     val backfilled: Boolean,
     val created_at: String,
-    val impact: String,
+    override val impact: String,
     val name: String,
     val status: String,
     val id: String,
-    val incident_updates: List<IncidentUpdate>,
+    val incident_updates: List<StatusUpdate>,
     val url: String,
-    val affected_components: List<AffectedComponent>
-)
+    override val affected_components: List<AffectedComponent>
+) : WebhookData()
 
-class IncidentUpdate(
+class StatusUpdate(
     val id: String,
-    val incident_id: String,
     val body: String,
     val markdown: String,
-    val status: String,
     val created_at: String,
     val updated_at: String,
 )
