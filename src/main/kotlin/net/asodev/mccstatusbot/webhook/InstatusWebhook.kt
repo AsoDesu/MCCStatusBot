@@ -18,10 +18,6 @@ import java.time.format.DateTimeFormatter
 class InstatusWebhook(val twitter: Twitter) {
     private val LOGGER = LoggerFactory.getLogger(this::class.java)
 
-    // Twitter has a character limit
-    private val CHARACTER_LIMIT = 280
-    private val CHARACTER_LIMIT_EXCEEDED_SUFFIX = "..."
-
     // Status to be shown as "<Component> experiencing <Status>"
     private val EXPERIENCING = listOf(STATUS_MAJOR_OUTAGE, STATUS_PARTIAL_OUTAGE, STATUS_DEGRADED_PERFORMANCE)
     // Status to be shown as "<Component> is <Status>"
@@ -42,7 +38,7 @@ class InstatusWebhook(val twitter: Twitter) {
         }
         val update = data.incident ?: data.maintenance ?: return
 
-        val content = buildString {
+        var content = buildString {
             val component = update.affected_components.firstOrNull()
             // Writing the "MCC Island is Operation" or "Maintenance planned for MCC Island" text
             if (component != null) {
@@ -63,16 +59,7 @@ class InstatusWebhook(val twitter: Twitter) {
             }
         }
 
-        val characterLimit = CHARACTER_LIMIT - CHARACTER_LIMIT_EXCEEDED_SUFFIX.length - 1
-        var tweetContent = content.substring(0..characterLimit)
-        if (tweetContent.length >= characterLimit) {
-            tweetContent += CHARACTER_LIMIT_EXCEEDED_SUFFIX
-        }
-
-        val tweet = TweetRequest(
-            text = tweetContent
-        )
-        twitter.sendTweet(tweet)
+        twitter.tweet(content)
         LOGGER.info("Sent tweet for incident: ${update.id}")
     }
 
