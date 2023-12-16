@@ -1,4 +1,6 @@
-![MCC Status](https://i.imgur.com/Da6bv1C_d.webp?maxwidth=600&fidelity=grand)
+<img src="https://github.com/AsoDesu/MCCStatusBot/assets/53526710/a259b7f2-1de9-489a-b03a-5c03cbd549b0" alt="MCC Status" height=150>
+
+
 
 [![Follow us](https://img.shields.io/twitter/follow/mccstatusbot?style=flat%20&logo=twitter)](https://twitter.com/mccstatusbot)
 
